@@ -32,6 +32,7 @@ def get_gold_price():
             },
             "physical": {
                 "buy": None,  # Bank Buys (User Sells)
+                "sell": None  # Bank Sells (User Buys)
             },
             "timestamp": None
         }
@@ -67,15 +68,19 @@ def get_gold_price():
             table_text = table.get_text()
             if "臺銀金鑽條塊" in table_text and "生肖版" not in table_text:
                 # Found the correct table.
-                # Look for the row with "本行買進".
                 rows = table.find_all('tr')
                 for row in rows:
-                    if "本行買進" in row.get_text():
+                    row_text = row.get_text()
+                    if "本行買進" in row_text:
                         # The price is in `td.text-right`.
                         price_td = row.select_one('td.text-right')
                         if price_td:
                             result['physical']['buy'] = price_td.get_text(strip=True)
-                            break
+                    elif "本行賣出" in row_text:
+                        # The price is in `td.text-right`.
+                        price_td = row.select_one('td.text-right')
+                        if price_td:
+                            result['physical']['sell'] = price_td.get_text(strip=True)
                 break
 
         # Add timestamp

@@ -23,65 +23,78 @@
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-white sm:bg-gray-100 min-h-screen flex items-center justify-center p-0 sm:p-4">
 
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg overflow-hidden">
+    <div
+        class="max-w-lg w-full bg-white sm:rounded-xl sm:shadow-lg rounded-none shadow-none overflow-hidden min-h-screen sm:min-h-0 flex flex-col sm:block">
         <!-- Header -->
-        <div class="bg-yellow-500 p-6 text-center">
+        <div class="bg-yellow-500 p-4 text-center shrink-0">
             <h1 class="text-2xl font-bold text-white">Gold Price Monitor</h1>
-            <p class="text-yellow-100 text-sm mt-1">即時黃金牌價監控</p>
+            <p class="text-yellow-100 text-sm mt-0.5">即時黃金牌價監控</p>
         </div>
 
         <!-- Content -->
-        <div class="p-6 space-y-6">
+        <div class="p-4 sm:p-6 space-y-4 flex-grow overflow-y-auto">
 
             <!-- Update Time -->
             <div class="text-center text-gray-500 text-sm">
                 更新時間: <span id="update-time">Loading...</span>
             </div>
 
-            <!-- Gold Passbook Card -->
-            <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-                <h2 class="text-lg font-bold text-yellow-800 mb-3 border-b border-yellow-200 pb-2">黃金存摺 (1公克)</h2>
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-600">本行賣出</span>
-                    <span class="text-xl font-bold text-red-600" id="pb-sell">---</span>
+            <!-- Price Cards Grid -->
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Gold Passbook Card -->
+                <div class="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                    <h2 class="text-base font-bold text-yellow-800 mb-2 border-b border-yellow-200 pb-1">黃金存摺 (1g)</h2>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-gray-600">賣出</span>
+                            <span class="text-lg font-bold text-red-600" id="pb-sell">---</span>
+                        </div>
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-gray-600">回收</span>
+                            <span class="text-lg font-bold text-green-600" id="pb-buy">---</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">本行回收</span>
-                    <span class="text-xl font-bold text-green-600" id="pb-buy">---</span>
-                </div>
-            </div>
 
-            <!-- Physical Gold Card -->
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h2 class="text-lg font-bold text-gray-800 mb-3 border-b border-gray-200 pb-2">實體金鑽條塊 (1台兩)</h2>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">本行回收</span>
-                    <span class="text-xl font-bold text-green-600" id="phy-buy">---</span>
+                <!-- Physical Gold Card -->
+                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200 flex flex-col justify-center">
+                    <h2 class="text-base font-bold text-gray-800 mb-2 border-b border-gray-200 pb-1">實體條塊 (1錢)</h2>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-gray-600">賣出</span>
+                            <span class="text-lg font-bold text-red-600" id="phy-sell">---</span>
+                        </div>
+                        <div class="flex justify-between items-baseline">
+                            <span class="text-sm text-gray-600">回收</span>
+                            <span class="text-lg font-bold text-green-600" id="phy-buy">---</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Trend Analysis Card -->
-            <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                <h2 class="text-lg font-bold text-purple-800 mb-3 border-b border-purple-200 pb-2">國際金價趨勢 (AI Tech)</h2>
-                <div class="text-sm text-purple-900 leading-relaxed" id="trend-analysis">
+            <div class="bg-purple-50 rounded-lg p-3 border border-purple-200">
+                <h2 class="text-base font-bold text-purple-800 mb-1 border-b border-purple-200 pb-1">國際趨勢 (AI Tech)</h2>
+                <div class="text-sm text-purple-900 leading-relaxed" id="trend-analysis"
+                    onclick="this.classList.toggle('truncate')">
                     載入中...
                 </div>
             </div>
 
-            <!-- Asset Calculator (Simple) -->
-            <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h2 class="text-lg font-bold text-blue-800 mb-3 border-b border-blue-200 pb-2">資產試算</h2>
-                <div class="space-y-3">
-                    <div class="flex flex-col">
-                        <label class="text-xs text-blue-600 mb-1">持有台兩</label>
-                        <input type="number" id="input-taels" value="0"
-                            class="border border-blue-300 rounded px-2 py-1 text-right focus:outline-none focus:border-blue-500"
+            <!-- Asset Calculator -->
+            <div class="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                <h2 class="text-base font-bold text-blue-800 mb-2 border-b border-blue-200 pb-1">資產試算</h2>
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-blue-600 whitespace-nowrap">台兩</label>
+                        <input type="number" id="input-taels" inputmode="decimal" onfocus="this.select()"
+                            class="w-20 border border-blue-300 rounded px-1 py-1 text-right text-base focus:outline-none focus:border-blue-500"
                             placeholder="0">
                     </div>
-                    <div class="flex justify-between items-center pt-2">
-                        <span class="text-blue-900 font-medium">總價值 (TWD)</span>
+                    <div class="text-right">
+                        <span class="text-sm text-blue-900 block">總價值 (TWD)</span>
                         <span class="text-2xl font-bold text-blue-600" id="total-value">0</span>
                     </div>
                 </div>
@@ -89,7 +102,7 @@
 
             <!-- Refresh Button -->
             <button onclick="fetchData(true)"
-                class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 rounded-lg transition duration-200">
+                class="w-full bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-white font-bold text-lg py-3 rounded-lg transition-transform duration-200 shadow-sm shrink-0 mt-auto">
                 手動更新
             </button>
 
@@ -112,8 +125,14 @@
                     document.getElementById('pb-sell').innerText = data.passbook.sell || 'N/A';
                     document.getElementById('pb-buy').innerText = data.passbook.buy || 'N/A';
 
-                    // Update Physical
-                    document.getElementById('phy-buy').innerText = data.physical.buy || 'N/A';
+                    // Update Physical (Convert Tael to Mace: / 10)
+                    const formatMace = (val) => {
+                        if (!val || val === 'N/A') return 'N/A';
+                        return Math.round(parseFloat(val.replace(/,/g, '')) / 10).toLocaleString();
+                    };
+
+                    document.getElementById('phy-sell').innerText = formatMace(data.physical.sell);
+                    document.getElementById('phy-buy').innerText = formatMace(data.physical.buy);
 
                     // Update Trend
                     if (data.trend) {
@@ -123,8 +142,7 @@
                     }
 
                     // Calculate Total Asset (Using Physical Bar Price for Taels)
-                    // If physical price is unavailable, maybe use passbook * 37.5 as fallback?
-                    // For now, let's prioritize Physical price.
+                    // Note: Calculator input is "Taels", so we keep using the full Tael price for calculation
                     let priceToUse = data.physical.buy;
                     if (!priceToUse || priceToUse === 'N/A') {
                         // Fallback logic: 1 Tael = 37.5 Grams

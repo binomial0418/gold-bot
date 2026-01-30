@@ -19,7 +19,7 @@ app = Flask(__name__)
 # Cache for latest gold price
 latest_price = {
     "passbook": {"buy": None, "sell": None},
-    "physical": {"buy": None},
+    "physical": {"buy": None, "sell": None},
     "timestamp": None
 }
 
@@ -76,23 +76,31 @@ def notify_user(data):
         pb_sell = data['passbook'].get('sell', 'N/A')
         pb_buy = data['passbook'].get('buy', 'N/A')
         phy_buy = data['physical'].get('buy', 'N/A')
+        phy_sell = data['physical'].get('sell', 'N/A')
         time_str = data.get('timestamp', datetime.datetime.now().strftime("%H:%M"))
         
-        # Calculate 4.5 Taels price
+        # Calculate 1 Mace (1/10 Tael) and 4.5 Taels price
         phy_buy_val = 0
+        phy_buy_mace = 'N/A'
+        phy_sell_mace = 'N/A'
         phy_buy_45 = 'N/A'
+        
         try:
             if phy_buy and phy_buy != 'N/A':
-                # Remove commas if present
                 phy_buy_val = float(phy_buy.replace(',', ''))
+                phy_buy_mace = "{:,.0f}".format(phy_buy_val / 10)
                 phy_buy_45 = "{:,.0f}".format(phy_buy_val * 4.5)
+            
+            if phy_sell and phy_sell != 'N/A':
+                phy_sell_val = float(phy_sell.replace(',', ''))
+                phy_sell_mace = "{:,.0f}".format(phy_sell_val / 10)
         except ValueError:
             pass
 
         # Get Market Trend (from cached data)
         trend_report = data.get('trend', '分析資料未更新')
 
-        msg = f"[台銀黃金報價] {time_str}\n存摺賣出: {pb_sell}\n存摺回收: {pb_buy}\n實體回收(1兩): {phy_buy}\n實體回收(4.5兩): {phy_buy_45}\n\n{trend_report}"
+        msg = f"[台銀黃金報價] {time_str}\n存摺賣出: {pb_sell} | 回收: {pb_buy}\n實體賣出(1錢): {phy_sell_mace} | 回收: {phy_buy_mace}\n實體回收(4.5兩): {phy_buy_45}\n\n{trend_report}"
         
         # Python Equivalent:
         # data={'payload': json_string} translates to application/x-www-form-urlencoded body "payload=..."
