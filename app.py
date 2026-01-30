@@ -1,10 +1,12 @@
 from flask import Flask, render_template, jsonify, request
+import os
 from apscheduler.schedulers.background import BackgroundScheduler
 import requests
 import logging
 import urllib.parse
 import json
 from scraper import get_gold_price
+from analysis import get_market_trend
 import datetime
 import atexit
 
@@ -31,6 +33,14 @@ def update_price_cache():
     price_data = get_gold_price()
     
     if price_data:
+        # Fetch Trend Analysis
+        try:
+            trend_report = get_market_trend()
+            price_data['trend'] = trend_report
+        except Exception as e:
+            logger.error(f"Failed to fetch trend: {e}")
+            price_data['trend'] = "無法取得分析資料"
+
         latest_price = price_data
         logger.info(f"Updated gold price: {latest_price}")
         return price_data
@@ -79,7 +89,10 @@ def notify_user(data):
         except ValueError:
             pass
 
-        msg = f"[台銀黃金報價] {time_str}\n存摺賣出: {pb_sell}\n存摺回收: {pb_buy}\n實體回收(1兩): {phy_buy}\n實體回收(4.5兩): {phy_buy_45}"
+        # Get Market Trend (from cached data)
+        trend_report = data.get('trend', '分析資料未更新')
+
+        msg = f"[台銀黃金報價] {time_str}\n存摺賣出: {pb_sell}\n存摺回收: {pb_buy}\n實體回收(1兩): {phy_buy}\n實體回收(4.5兩): {phy_buy_45}\n\n{trend_report}"
         
         # Python Equivalent:
         # data={'payload': json_string} translates to application/x-www-form-urlencoded body "payload=..."
@@ -107,27 +120,25 @@ scheduler.add_job(func=update_price_cache, trigger="cron", minute=0)
 
 # 2. Daily Notification: 08:00 AM
 # Note: Since we have an hourly fetch at 08:00 (minute=0), this might overlap.
-# Ideally, we want to ensure the notify uses fresh data.
-# The job_daily_notify calls update_price_cache internally. 
-# To avoid double fetching at 08:00, we could exclude 08:00 from the hourly job or just let it happen (redundant but safe).
-# Let's just execute notify job at 08:00, which updates data. 
-# And hourly job runs at other times?
-# Actually, calling update twice is fine, but better to be clean.
-# Let's keep it simple: Hourly job runs every hour. Daily notify runs at 08:00 (maybe slightly after? or independently).
-# User request: "早上八點發送通之前抓一次".
-# So: 
-# Hourly job: 0, 1, ... 7, 9, ... 23 ?
-# Or just let them be independent.
-# Let's set notify to run *also* at 08:00.
-scheduler.add_job(func=job_daily_notify, trigger="cron", hour=8, minute=0)
+# Only start scheduler in the reloader process (if debugging) or main process (if not debugging)
+if os.environ.get('FLASK_DEBUG') != '1' or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    scheduler = BackgroundScheduler()
 
-# 3. Add immediate job (run now) to ensure data AND notification on startup
-scheduler.add_job(func=job_daily_notify, trigger="date", run_date=datetime.datetime.now())
+    # 1. Automatic Fetch: Every hour on the hour (e.g. 09:00, 10:00...)
+    scheduler.add_job(func=update_price_cache, trigger="cron", minute=0)
 
-scheduler.start()
+    # 2. Daily Notification: 08:00 AM
+    scheduler.add_job(func=job_daily_notify, trigger="cron", hour=8, minute=0)
 
-# Shut down the scheduler when exiting the app
-atexit.register(lambda: scheduler.shutdown())
+    # 3. Add immediate job (run now) to ensure data AND notification on startup
+    scheduler.add_job(func=job_daily_notify, trigger="date", run_date=datetime.datetime.now())
+
+    scheduler.start()
+
+    # Shut down the scheduler when exiting the app
+    atexit.register(lambda: scheduler.shutdown())
+else:
+    logger.info("Scheduler skipped in main process (waiting for reloader).")
 
 @app.route('/')
 def index():
