@@ -3,6 +3,9 @@ from bs4 import BeautifulSoup
 import logging
 from fake_useragent import UserAgent
 
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -21,7 +24,19 @@ def get_gold_price():
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        # Create a session with retry logic
+        session = requests.Session()
+        retry = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[500, 502, 503, 504],
+            allowed_methods=["GET"]
+        )
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('https://', adapter)
+        session.mount('http://', adapter)
+
+        response = session.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -93,6 +108,7 @@ def get_gold_price():
 
         if not result['passbook']['buy'] and not result['physical']['buy']:
             logger.warning("Parsed data is all None. HTML structure might have changed.")
+            return None
 
         return result
 

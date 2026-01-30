@@ -31,23 +31,38 @@ def update_price_cache():
     """
     global latest_price
     logger.info("Starting job: update_price_cache")
-    price_data = get_gold_price()
     
-    if price_data:
-        # Fetch Trend Analysis
+    max_retries = 3
+    retry_delay = 10  # seconds
+    
+    for attempt in range(1, max_retries + 1):
         try:
-            trend_report = get_market_trend()
-            price_data['trend'] = trend_report
+            price_data = get_gold_price()
+            
+            if price_data:
+                # Fetch Trend Analysis
+                try:
+                    trend_report = get_market_trend()
+                    price_data['trend'] = trend_report
+                except Exception as e:
+                    logger.error(f"Failed to fetch trend: {e}")
+                    price_data['trend'] = "無法取得分析資料"
+        
+                latest_price = price_data
+                logger.info(f"Updated gold price: {latest_price}")
+                return price_data
+            else:
+                logger.warning(f"Attempt {attempt}/{max_retries} failed: get_gold_price returned None.")
+        
         except Exception as e:
-            logger.error(f"Failed to fetch trend: {e}")
-            price_data['trend'] = "無法取得分析資料"
-
-        latest_price = price_data
-        logger.info(f"Updated gold price: {latest_price}")
-        return price_data
-    else:
-        logger.error("Failed to fetch gold price.")
-        return None
+            logger.error(f"Attempt {attempt}/{max_retries} exception: {e}")
+            
+        if attempt < max_retries:
+            import time
+            time.sleep(retry_delay)
+            
+    logger.error(f"Failed to fetch gold price after {max_retries} attempts.")
+    return None
 
 def job_daily_notify():
     """
