@@ -88,7 +88,7 @@
                 <h2 class="text-base font-bold text-blue-800 mb-2 border-b border-blue-200 pb-1">資產試算</h2>
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-2">
-                        <label class="text-sm text-blue-600 whitespace-nowrap">台兩</label>
+                        <label class="text-sm text-blue-600 whitespace-nowrap">台錢</label>
                         <input type="number" id="input-taels" inputmode="decimal" onfocus="this.select()"
                             class="w-20 border border-blue-300 rounded px-1 py-1 text-right text-base focus:outline-none focus:border-blue-500"
                             placeholder="0">
@@ -102,9 +102,14 @@
 
             <!-- Refresh Button -->
             <button onclick="fetchData(true)"
-                class="w-full bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-white font-bold text-lg py-3 rounded-lg transition-transform duration-200 shadow-sm shrink-0 mt-auto">
+                class="hidden w-full bg-yellow-500 hover:bg-yellow-600 active:scale-95 text-white font-bold text-lg py-3 rounded-lg transition-transform duration-200 shadow-sm shrink-0 mt-auto">
                 手動更新
             </button>
+
+            <!-- Copyright Footer -->
+            <div class="text-center text-gray-400 text-xs mt-4 pb-2">
+                &copy; inskychen.com
+            </div>
 
         </div>
     </div>
@@ -141,19 +146,21 @@
                         document.getElementById('trend-analysis').innerText = "暫無分析資料";
                     }
 
-                    // Calculate Total Asset (Using Physical Bar Price for Taels)
-                    // Note: Calculator input is "Taels", so we keep using the full Tael price for calculation
-                    let priceToUse = data.physical.buy;
-                    if (!priceToUse || priceToUse === 'N/A') {
-                        // Fallback logic: 1 Tael = 37.5 Grams
-                        // If passbook price exists, convert it.
-                        if (data.passbook.buy && data.passbook.buy !== 'N/A') {
-                            const pbPrice = parseFloat(data.passbook.buy.replace(/,/g, ''));
-                            priceToUse = (pbPrice * 37.5).toFixed(0);
-                        }
+                    // Calculate Total Asset (Input is "Mace")
+                    // We need Price per Mace = Price per Tael / 10
+                    let pricePerMace = 0;
+
+                    if (data.physical.buy && data.physical.buy !== 'N/A') {
+                        // Official Tael Price / 10
+                        const phPrice = parseFloat(data.physical.buy.replace(/,/g, ''));
+                        pricePerMace = phPrice / 10;
+                    } else if (data.passbook.buy && data.passbook.buy !== 'N/A') {
+                        // Fallback logic: 1 Mace = 3.75 Grams
+                        const pbPrice = parseFloat(data.passbook.buy.replace(/,/g, ''));
+                        pricePerMace = pbPrice * 3.75;
                     }
 
-                    window.currentPrice = priceToUse;
+                    window.currentPrice = pricePerMace;
                     calculateAsset(window.currentPrice);
                 }
             } catch (error) {

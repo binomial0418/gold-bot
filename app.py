@@ -132,8 +132,8 @@ scheduler.add_job(func=update_price_cache, trigger="cron", minute=0)
 if os.environ.get('FLASK_DEBUG') != '1' or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
     scheduler = BackgroundScheduler()
 
-    # 1. Automatic Fetch: Every hour on the hour (e.g. 09:00, 10:00...)
-    scheduler.add_job(func=update_price_cache, trigger="cron", minute=0)
+    # 1. Automatic Fetch: Every 30 minutes (e.g. 09:00, 09:30...)
+    scheduler.add_job(func=update_price_cache, trigger="cron", minute="0,30")
 
     # 2. Daily Notification: 08:00 AM
     scheduler.add_job(func=job_daily_notify, trigger="cron", hour=8, minute=0)
