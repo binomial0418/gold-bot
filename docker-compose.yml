@@ -2,7 +2,7 @@ services:
   gold-bot:
     build: .
     ports:
-      - "9050:5001"
+      - "9051:5001"
     volumes:
       - .:/app
     environment:

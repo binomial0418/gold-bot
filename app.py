@@ -7,6 +7,7 @@ import urllib.parse
 import json
 from scraper import get_gold_price
 from analysis import get_market_trend
+from history import get_historical_data
 import datetime
 import atexit
 
@@ -164,6 +165,15 @@ def api_gold():
     # If no data yet (e.g. just started), returns what we have
     global latest_price
     return jsonify(latest_price)
+
+@app.route('/api/history')
+def api_history():
+    try:
+        data = get_historical_data()
+        return jsonify(data)
+    except Exception as e:
+        logger.error(f"API History Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     # This block is NOT executed when running with `flask run`

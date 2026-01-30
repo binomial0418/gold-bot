@@ -1,0 +1,16 @@
+{
+    "name": "gold-bot-frontend",
+    "version": "1.0.0",
+    "description": "Frontend build for Gold Bot",
+    "main": "index.js",
+    "scripts": {
+        "build": "npx tailwindcss -i ./static/src/input.css -o ./static/css/output.css --minify",
+        "watch": "npx tailwindcss -i ./static/src/input.css -o ./static/css/output.css --watch"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "tailwindcss": "^3.4.1"
+    }
+}

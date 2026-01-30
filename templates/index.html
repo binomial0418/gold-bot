@@ -14,7 +14,17 @@
             }
         }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind = {
+            config: {
+                theme: {
+                    extend: {}
+                }
+            }
+        }
+    </script>
+    <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -40,6 +50,11 @@
             <div class="flex justify-between items-center text-xs px-2">
                 <span class="text-gray-400">資料來源：臺灣銀行</span>
                 <span class="text-gray-500">更新: <span id="update-time">Loading...</span></span>
+            </div>
+
+            <!-- Price Chart Card -->
+            <div class="bg-white rounded-lg p-2 border border-gray-200 shadow-sm">
+                <canvas id="goldChart" style="max-height: 200px; width: 100%;"></canvas>
             </div>
 
             <!-- Price Cards Grid -->
@@ -189,8 +204,85 @@
             }
         });
 
+        // Chart.js Configuration
+        let priceChart = null;
+
+        async function initChart() {
+            try {
+                const response = await fetch('/api/history');
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                const ctx = document.getElementById('goldChart').getContext('2d');
+
+                // Create Gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 200);
+                gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+                gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+
+                priceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.dates,
+                        datasets: [{
+                            label: '黃金存摺 (買入)',
+                            data: data.prices,
+                            borderColor: '#D4AF37',
+                            backgroundColor: gradient,
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    label: function (context) {
+                                        return `價格: ${context.parsed.y} TWD`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                grid: { display: false },
+                                ticks: {
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 5,
+                                    font: { size: 10 }
+                                }
+                            },
+                            y: {
+                                display: true,
+                                grid: { color: '#f3f4f6' },
+                                ticks: { font: { size: 10 } }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'nearest'
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading chart:', error);
+            }
+        }
+
         // Initial Fetch
         fetchData();
+        initChart();
 
         // Poll every 60 seconds for frontend updates
         setInterval(fetchData, 60000);
